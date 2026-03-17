@@ -47,6 +47,7 @@ class Task(db.Model):
 @app.route("/register", methods=["POST"])
 def register():
     data = request.json
+
     # hash password
     hashed_pw = bcrypt.hashpw(
         data["password"].encode("utf-8"),
@@ -153,4 +154,4 @@ def delete_task(task_id):
 
 if __name__ == "__main__":
    # creates tables automatically in MySQL
-    app.run(debug=True)
+    app.run(debug=False)
