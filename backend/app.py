@@ -153,5 +153,4 @@ def delete_task(task_id):
 # ---------------- RUN ----------------
 
 if __name__ == "__main__":
-   # creates tables automatically in MySQL
     app.run(debug=False)
