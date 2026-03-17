@@ -84,7 +84,7 @@ def debug():
     except Exception as e:
         return jsonify({"error": str(e)})
     
-    
+
 @app.route("/login", methods=["POST"])
 def login():
     data = request.json
@@ -125,7 +125,7 @@ def get_tasks(user_id):
 
 @app.route("/tasks", methods=["POST"])
 def add_task():
-    data = request.json
+    data = request.get_json()
 
     task = Task(
         title=data["title"],
