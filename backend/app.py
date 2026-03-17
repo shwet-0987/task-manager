@@ -53,7 +53,9 @@ def home():
 @app.route("/register", methods=["POST"])
 def register():
     try:
-        data = request.json
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Invalid JSON"}), 400
 
         hashed_pw = bcrypt.hashpw(
             data["password"].encode("utf-8"),
