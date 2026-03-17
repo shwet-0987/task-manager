@@ -15,7 +15,7 @@ db = SQLAlchemy(app)
 class User(db.Model):
     __tablename__ = "users"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True)
     password = db.Column(db.String(250), nullable=False)
@@ -27,7 +27,7 @@ class User(db.Model):
 class Task(db.Model):
     __tablename__ = "tasks"
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(50), nullable=False)
     description = db.Column(db.Text)
     status = db.Column(db.Enum("pending", "completed"), default="pending")
@@ -55,6 +55,7 @@ def register():
     )
 
     user = User(
+        id = 1,
         username=data["username"],
         email=data["email"],
         password=hashed_pw.decode("utf-8")
