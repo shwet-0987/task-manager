@@ -35,7 +35,7 @@ class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(50), nullable=False)
     description = db.Column(db.Text)
-    status = db.Column(db.Enum("pending", "completed"), default="pending")
+    status = db.Column(db.String(20), default="pending")
 
     user_id = db.Column(
         db.Integer,
