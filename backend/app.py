@@ -6,7 +6,8 @@ import bcrypt
 app = Flask(__name__)
 CORS(app)
 
-app.config["SQLALCHEMY_DATABASE_URI"] ="mysql+pymysql://root:AptpOMiErXofCllPOpWBUmYCpTIgkRqy@yamanote.proxy.rlwy.net:42589/railway"
+app.config["SQLALCHEMY_DATABASE_URI"] = \
+"mysql+pymysql://root:AptpOMiErXofCllPOpWBUmYCpTIgkRqy@yamanote.proxy.rlwy.net:42589/railway?ssl=true"
 # mysql://root:AptpOMiErXofCllPOpWBUmYCpTIgkRqy@yamanote.proxy.rlwy.net:42589/railway
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -51,26 +52,39 @@ def home():
 
 @app.route("/register", methods=["POST"])
 def register():
-    data = request.json
+    try:
+        data = request.json
 
-    # hash password
-    hashed_pw = bcrypt.hashpw(
-        data["password"].encode("utf-8"),
-        bcrypt.gensalt()
-    )
+        hashed_pw = bcrypt.hashpw(
+            data["password"].encode("utf-8"),
+            bcrypt.gensalt()
+        )
 
-    user = User(
-        username=data["username"],
-        email=data["email"],
-        password=hashed_pw.decode("utf-8")
-    )
+        user = User(
+            username=data["username"],
+            email=data["email"],
+            password=hashed_pw.decode("utf-8")
+        )
 
-    db.session.add(user)
-    db.session.commit()
+        db.session.add(user)
+        db.session.commit()
 
-    return jsonify({"message": "User registered successfully"}), 201
+        return jsonify({"message": "User registered successfully"}), 201
 
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())  # 👈 shows full error in Render logs
+        return jsonify({"error": str(e)}), 500
 
+@app.route("/debug")
+def debug():
+    try:
+        users = User.query.all()
+        return jsonify({"users_count": len(users)})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+    
+    
 @app.route("/login", methods=["POST"])
 def login():
     data = request.json
