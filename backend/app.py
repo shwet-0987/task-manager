@@ -54,8 +54,7 @@ class Task(db.Model):
 @app.route("/init-db")
 def init_db():
     try:
-        with app.app_context():
-            db.create_all()
+        db.create_all()
         return "Database initialized successfully ✅"
     except Exception as e:
         return str(e)
@@ -81,7 +80,10 @@ def debug():
 @app.route("/register", methods=["POST"])
 def register():
     try:
-        data = request.get_json(force=True)
+        data = request.get_json(silent=True)
+
+        if not isinstance(data, dict):
+            return jsonify({"error": "Invalid JSON"}), 400
 
         if not isinstance(data, dict):
             return jsonify({"error": "Invalid JSON"}), 400
