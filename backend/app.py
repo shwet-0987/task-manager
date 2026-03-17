@@ -2,16 +2,20 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import bcrypt
+from sqlalchemy.sql import func
 
 app = Flask(__name__)
 CORS(app)
 
+# ---------------- DB CONFIG ----------------
 app.config["SQLALCHEMY_DATABASE_URI"] = \
 "mysql+pymysql://root:AptpOMiErXofCllPOpWBUmYCpTIgkRqy@yamanote.proxy.rlwy.net:42589/railway?ssl=true"
-# mysql://root:AptpOMiErXofCllPOpWBUmYCpTIgkRqy@yamanote.proxy.rlwy.net:42589/railway
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
+
+# ---------------- MODELS ----------------
 
 class User(db.Model):
     __tablename__ = "users"
@@ -20,7 +24,7 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True)
     password = db.Column(db.String(250), nullable=False)
-    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    created_at = db.Column(db.DateTime, server_default=func.now())
 
     tasks = db.relationship("Task", backref="user", cascade="all, delete")
 
@@ -39,22 +43,41 @@ class Task(db.Model):
         nullable=False
     )
 
-    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    created_at = db.Column(db.DateTime, server_default=func.now())
     updated_at = db.Column(
         db.DateTime,
-        onupdate=db.func.now()
+        server_default=func.now(),
+        onupdate=func.now()
     )
 
+# ---------------- FORCE TABLE CREATION (IMPORTANT) ----------------
+with app.app_context():
+    db.create_all()
+
+# ---------------- ROUTES ----------------
 
 @app.route("/")
 def home():
-    return "task manager api is running"
+    return "Task Manager API is running 🚀"
+
+
+@app.route("/debug")
+def debug():
+    try:
+        users = User.query.all()
+        return jsonify({"users_count": len(users)})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
+# ---------------- AUTH ----------------
 
 @app.route("/register", methods=["POST"])
 def register():
     try:
-        data = request.get_json()
-        if not data:
+        data = request.get_json(force=True)
+
+        if not isinstance(data, dict):
             return jsonify({"error": "Invalid JSON"}), 400
 
         hashed_pw = bcrypt.hashpw(
@@ -75,106 +98,117 @@ def register():
 
     except Exception as e:
         import traceback
-        print(traceback.format_exc())  # 👈 shows full error in Render logs
+        print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
-@app.route("/debug")
-def debug():
-    try:
-        users = User.query.all()
-        return jsonify({"users_count": len(users)})
-    except Exception as e:
-        return jsonify({"error": str(e)})
-    
 
 @app.route("/login", methods=["POST"])
 def login():
-    data = request.json
+    try:
+        data = request.get_json(force=True)
 
-    user = User.query.filter_by(username=data["username"]).first()
+        user = User.query.filter_by(username=data["username"]).first()
 
-    if not user:
-        return jsonify({"error": "User not found"}), 404
+        if not user:
+            return jsonify({"error": "User not found"}), 404
 
-    if bcrypt.checkpw(
-        data["password"].encode("utf-8"),
-        user.password.encode("utf-8")
-    ):
-        return jsonify({
-            "message": "Login successful",
-            "user_id": user.id
-        })
+        if bcrypt.checkpw(
+            data["password"].encode("utf-8"),
+            user.password.encode("utf-8")
+        ):
+            return jsonify({
+                "message": "Login successful",
+                "user_id": user.id
+            })
 
-    return jsonify({"error": "Invalid credentials"}), 401
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return jsonify({"error": str(e)}), 500
 
 
 # ---------------- TASK CRUD ----------------
 
 @app.route("/tasks/<int:user_id>", methods=["GET"])
 def get_tasks(user_id):
-    tasks = Task.query.filter_by(user_id=user_id).all()
+    try:
+        tasks = Task.query.filter_by(user_id=user_id).all()
 
-    return jsonify([
-        {
-            "id": t.id,
-            "title": t.title,
-            "description": t.description,
-            "status": t.status
-        }
-        for t in tasks
-    ])
+        return jsonify([
+            {
+                "id": t.id,
+                "title": t.title,
+                "description": t.description,
+                "status": t.status
+            }
+            for t in tasks
+        ])
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 
 @app.route("/tasks", methods=["POST"])
 def add_task():
-    data = request.get_json()
+    try:
+        data = request.get_json(force=True)
 
-    task = Task(
-        title=data["title"],
-        description=data.get("description"),
-        user_id=data["user_id"]
-    )
+        task = Task(
+            title=data["title"],
+            description=data.get("description"),
+            user_id=data["user_id"]
+        )
 
-    db.session.add(task)
-    db.session.commit()
+        db.session.add(task)
+        db.session.commit()
 
-    return jsonify({"message": "Task added"}), 201
+        return jsonify({"message": "Task added"}), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 
 @app.route("/tasks/<int:task_id>", methods=["PUT"])
 def update_task(task_id):
-    task = Task.query.get(task_id)
+    try:
+        task = Task.query.get(task_id)
 
-    if not task:
-        return jsonify({"error": "Task not found"}), 404
+        if not task:
+            return jsonify({"error": "Task not found"}), 404
 
-    data = request.json
-    task.title = data.get("title", task.title)
-    task.description = data.get("description", task.description)
-    task.status = data.get("status", task.status)
+        data = request.get_json(force=True)
 
-    db.session.commit()
+        task.title = data.get("title", task.title)
+        task.description = data.get("description", task.description)
+        task.status = data.get("status", task.status)
 
-    return jsonify({"message": "Task updated"})
+        db.session.commit()
+
+        return jsonify({"message": "Task updated"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 
 @app.route("/tasks/<int:task_id>", methods=["DELETE"])
 def delete_task(task_id):
-    task = Task.query.get(task_id)
+    try:
+        task = Task.query.get(task_id)
 
-    if not task:
-        return jsonify({"error": "Task not found"}), 404
+        if not task:
+            return jsonify({"error": "Task not found"}), 404
 
-    db.session.delete(task)
-    db.session.commit()
+        db.session.delete(task)
+        db.session.commit()
 
-    return jsonify({"message": "Task deleted"})
+        return jsonify({"message": "Task deleted"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 
 # ---------------- RUN ----------------
 
 if __name__ == "__main__":
-   # creates tables automatically in MySQL
-    with app.app_context():
-        db.create_all() 
     app.run()
