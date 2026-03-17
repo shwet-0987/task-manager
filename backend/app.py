@@ -3,9 +3,18 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import bcrypt
 from sqlalchemy.sql import func
+import os
+from dotenv import load_dotenv
 
+
+load_dotenv()
 app = Flask(__name__)
 CORS(app)
+MYSQL_USER = os.getenv('MYSQLUSER')
+MYSQL_PASSWORD = os.getenv('MYSQLPASSWORD')
+MYSQL_HOST = os.getenv('MYSQLHOST')
+MYSQL_PORT = os.getenv('MYSQLPORT', '3306')
+MYSQL_DB = os.getenv('MYSQLDATABASE')
 
 # ---------------- DB CONFIG ----------------
 app.config["SQLALCHEMY_DATABASE_URI"] = \
