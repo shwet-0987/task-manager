@@ -6,8 +6,9 @@ import bcrypt
 app = Flask(__name__)
 CORS(app)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:AptpOMiErXofCllPOpWBUmYCpTIgkRqy@mysql.railway.internal:3306/railway"
-# mysql://root:AptpOMiErXofCllPOpWBUmYCpTIgkRqy@mysql.railway.internal:3306/railway
+app.config["SQLALCHEMY_DATABASE_URI"] = \
+    "mysql+pymysql://root:AptpOMiErXofCllPOpWBUmYCpTIgkRqy@yamanote.proxy.rlwy.net:42589/railway"
+# mysql://root:AptpOMiErXofCllPOpWBUmYCpTIgkRqy@yamanote.proxy.rlwy.net:42589/railway
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
