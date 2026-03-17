@@ -51,8 +51,14 @@ class Task(db.Model):
     )
 
 # ---------------- FORCE TABLE CREATION (IMPORTANT) ----------------
-with app.app_context():
-    db.create_all()
+@app.route("/init-db")
+def init_db():
+    try:
+        with app.app_context():
+            db.create_all()
+        return "Database initialized successfully ✅"
+    except Exception as e:
+        return str(e)
 
 # ---------------- ROUTES ----------------
 
