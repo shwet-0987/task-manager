@@ -18,7 +18,7 @@ MYSQL_DB = os.getenv('MYSQLDATABASE')
 
 # ---------------- DB CONFIG ----------------
 app.config["SQLALCHEMY_DATABASE_URI"] = \
-"mysql+pymysql://root:AptpOMiErXofCllPOpWBUmYCpTIgkRqy@yamanote.proxy.rlwy.net:42589/railway?ssl=true"
+f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}?ssl=true"
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
