@@ -6,7 +6,7 @@ import bcrypt
 app = Flask(__name__)
 CORS(app)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:mysql123@localhost/task_manager"
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:fdbXASyqhZsQhfnwyjMUyunAiyWPpWij@yamanote.proxy.rlwy.net:13608/railway"
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -47,7 +47,6 @@ class Task(db.Model):
 @app.route("/register", methods=["POST"])
 def register():
     data = request.json
-
     # hash password
     hashed_pw = bcrypt.hashpw(
         data["password"].encode("utf-8"),
@@ -154,4 +153,4 @@ def delete_task(task_id):
 
 if __name__ == "__main__":
    # creates tables automatically in MySQL
-    app.run
+    app.run(debug=True)
