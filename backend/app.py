@@ -55,7 +55,6 @@ def register():
     )
 
     user = User(
-        id = 1,
         username=data["username"],
         email=data["email"],
         password=hashed_pw.decode("utf-8")
