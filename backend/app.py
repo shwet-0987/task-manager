@@ -44,6 +44,11 @@ class Task(db.Model):
         onupdate=db.func.now()
     )
 
+
+@app.route("/")
+def home():
+    return "task manager api is running"
+
 @app.route("/register", methods=["POST"])
 def register():
     data = request.json
