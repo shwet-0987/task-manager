@@ -17,6 +17,7 @@ const[description, setDescription] = useState("none");
     });
 
     const data = await res.json();
+    localStorage.setItem("token", data.access_token);
 
     if (data.user_id) {
       setUserId(data.user_id);
@@ -24,15 +25,21 @@ const[description, setDescription] = useState("none");
       alert("Invalid login");
     }
   };
-
+ const token = localStorage.getItem("token");
   // FETCH TASKS
   useEffect(() => {
-    if (userId) {
-      fetch(`https://task-manager-p3ln.onrender.com/tasks/${userId}`)
+    if (token){
+      fetch(`https://task-manager-p3ln.onrender.com/tasks`,{
+        headers: { Authorization: `Bearer ${token}` }
+      })
         .then((res) => res.json())
-        .then((data) => setTasks(data));
+        .then((data) => setTasks(data))
+        .catch((err) => {
+          console.error("Failed to load tasks:", err);
+          setTasks([]);
+        });
     }
-  }, [userId]);
+  },[token]);
 
   const toggleStatus = async (task) => {
   const newStatus =
@@ -40,29 +47,52 @@ const[description, setDescription] = useState("none");
 
   await fetch(`https://task-manager-p3ln.onrender.com/tasks/${task.id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify({ status: newStatus }),
   });
 
   // Refresh tasks
-  fetch(`https://task-manager-p3ln.onrender.com/tasks/${userId}`)
+  fetch(`https://task-manager-p3ln.onrender.com/tasks`, {
+    headers: { Authorization: `Bearer ${token}` }
+  })
     .then((res) => res.json())
-    .then((data) => setTasks(data));
+    .then((data) => setTasks(data))
+    .catch((err) => {
+      console.error("refresh tasks failed", err);
+    });
 };
   // ADD TASK
   const addTask = async () => {
     await fetch("https://task-manager-p3ln.onrender.com/tasks", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: newTask, description: description,user_id: userId }),
+      headers: { "Content-Type": "application/json" , Authorization: `Bearer ${token}`},
+      body: JSON.stringify({ title: newTask, description: description }),
     });
 
     setNewTask("");
     setDescription("");
-    fetch(`https://task-manager-p3ln.onrender.com/tasks/${userId}`)
+    // Refresh tasks after adding
+    fetch(`https://task-manager-p3ln.onrender.com/tasks`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
       .then((res) => res.json())
       .then((data) => setTasks(data));
   };
+
+  const deleteTask = async (task) => {
+    await fetch(`https://task-manager-p3ln.onrender.com/tasks/${task.id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    // Refresh tasks after deletion
+    fetch(`https://task-manager-p3ln.onrender.com/tasks`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then((res) => res.json())
+      .then((data) => setTasks(data));
+  };
+
 
   // LOGIN UI
   if (!userId) {
@@ -111,6 +141,9 @@ const[description, setDescription] = useState("none");
         }}
       >
         {task.title}
+        <button onClick={() => deleteTask(task)}>
+          Delete
+        </button>
       </strong>
       <br />
       <small>{task.description}</small>
