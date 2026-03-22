@@ -5,3 +5,4 @@ pymysql
 bcrypt
 gunicorn
 python-dotenv
+flask-jwt-extended
